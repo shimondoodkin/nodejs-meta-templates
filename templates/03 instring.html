@@ -1,0 +1,42 @@
+string1 in string2 <% echo+=" ' "  %> end string1 in string2 
+string2 in string1 <% echo+= ' " '  %> end string1 in string2 
+
+backslashed string1 in string1 <% echo+=' \' '  %> end backslashed string1 in string1 
+double backslash near string1 in string1 <% echo+=' \\'  %> end double backslash near string1 in string1 
+double backslash near string2 in string2 <% echo+=" \\"  %> end double backslash near string2 in string2 
+
+everything in string <% echo+=' \\ \" \' %> <% <%= %>%> '  %> end everything in string
+
+
+open tag in string1 <% echo+='<%'  %> end open tag in string1
+open tag in string2 <% echo+="<%" %> end open tag in string2
+open tag in comment <% echo+= '' /*<%*/ %> end open tag in comment
+
+
+close tag in string1 <% echo+='%>'  %> end close tag in string1
+close tag in string2 <% echo+="%>" %> end close tag in string2
+close tag in comment <% echo+= '' /*%>*/ %> end close tag in comment
+
+both tags in string1 <% echo+='<% %>'  %> end both tags in string1
+both tags in string2 <% echo+="<% %>" %> end both tags in string2
+both tags in comment <% echo+= '' /*<% %>*/ %> end both tags  in comment
+
+both tags in comment <% echo+="" ///* */ %> end both tags  in comment
+
+comented below
+<%
+/*
+
+
+open tag in string1 <% echo '<%'  %> end open tag in string1
+open tag in string2 <% echo "<%" %> end open tag in string2
+open tag in comment <% echo / *<%* / %> end open tag in comment
+//
+
+close tag in string1 <% echo '%>'  %> end close tag in string1
+close tag in string2 <% echo "%>" %> end close tag in string2
+close tag in comment <% echo / *%>* / %> end close tag in comment
+
+*/
+%>
+end comented

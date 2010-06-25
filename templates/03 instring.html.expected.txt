@@ -1,0 +1,6 @@
+open tags and close tags are: "<%" "%>"
+---input:
+hello <% code %> world
+----
+-----result-----
+[{"type":"text","s":0,"e":6,"data":"hello "},{"type":"code","s":8,"e":14,"data":" code "},{"type":"text","s":16,"e":22,"data":" world"}]

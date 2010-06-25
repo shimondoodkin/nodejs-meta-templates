@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>ממשק ניהול</title>
+</head>
+
+<body>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td height="60" bgcolor="#0a1ed4"  style="color:#FFFFFF;padding-left:10px;padding-right:10px;"><span style="font-size:265%;font-style:italic">PIJIMI</span></td>
+    <td height="60" bgcolor="#0a1ed4" dir="rtl" style="color:#FFFFFF;padding-left:10px;padding-right:10px;text-align:right;direction:rtl"><span style="font-size:265%;font-style:italic">ממשק ניהול</span></td>
+  </tr>
+</table>
+
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+      <tr>
+        <td dir="rtl" style="padding:10px;text-align:right;direction:rtl"><?=content?></td>
+        <td dir="rtl" width="225" bgcolor="#ccd5f4" style="padding:10px;text-align:right;direction:rtl">
+         <%
+          function print_menu(menu1)
+          {
+           var echo;
+           for(link in menu1)
+           {
+            echo+='<?link='+JSON.stringify(link)+'?>';
+            %>
+            <ul>
+             <li><a href="<?=link.href?>"><?=link.name?></a></li>
+             <%=print_menu(menu1)%>
+            </ul>
+            <%
+           }
+           return echo;
+          }
+          echo+=print_menu(menu);
+         %>
+        </td>
+      </tr>
+</table>
+</body>
+</html>
