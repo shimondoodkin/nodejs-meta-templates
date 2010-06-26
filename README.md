@@ -73,7 +73,8 @@ A template that processed twice:
 
 ### to include in in nodejs I use:
       var te = require('doubletemplate');  //load double teplate module
-      var doubletemplate=te.doubletemplate; // export double template function to global
+or
+      var loadtemplate=require('doubletemplate').loadtemplate; // only load template function
 
 ### example of using `parsedir` function:
       te.parsedir(__dirname+'/templates',{'app':app});

@@ -62,7 +62,6 @@ var fs = require('fs');    // lets open files
 
 // to include in in nodejs i use:
 // var te = require('doubletemplate');  //load double teplate module
-// var doubletemplate=te.doubletemplate; // export double template function to global
 
 //example of useing parsedir function:
 // te.parsedir(__dirname+'/templates',{'app':app});
