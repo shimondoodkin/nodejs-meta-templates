@@ -1,5 +1,4 @@
 ## Meta templates / Double Template for Node.js
- by Shimon Doodkin, helpmepro1@gmail.com http://github.com/shimondoodkin/nodejs-meta-templates
  
  I have checked many templates and not found a really stright forwared simple templets script.
  So i decided to write my own.
@@ -82,18 +81,19 @@ A template that processed twice:
 ### example of useing `parsedir` function:
       te.parsedir(fs,__dirname+'/templates',{'app':app});
 
-### in the code you use:
+### example of useing `loadfile` function:
+      te.loadfile(fs,__dirname+'/templates/filename.html',{'app':app},__dirname);
+
+### in the code you can use:
       te.templates['subdir/filename.html']({'app':app});
-also you could have dotnet like componetns if you do like:
-      var localstate={};
-      te.templates['subdir/filename.html']({'app':app,'localstate':localstate});
 
 the code is in stright forward logic you can read it and understand how it works.
 
 
-
 ### todo:
-to add parsing of first ; position for output shortcut tag to allow easyier convertion to non bloking style if needed.  
-later I plan to rewrite it to support html paritials with sizzle css selector. like styling html with paritial html.
-later I plan to enhance the api and the module structure.
-for now what I we have here is enought for me.
+* to add parsing of first ; position for output shortcut tag to allow easyier convertion to non bloking style if needed.  
+* later I plan to rewrite it to support html paritials with sizzle css selector. like styling html with paritial html.
+* later I plan to enhance the api and the module structure.
+for now what is here is enought for me.
+
+by Shimon Doodkin, helpmepro1@gmail.com http://github.com/shimondoodkin/nodejs-meta-templates

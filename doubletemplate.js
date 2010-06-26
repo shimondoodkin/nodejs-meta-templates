@@ -273,8 +273,15 @@ function gettemplate1(template,data)
 
 function gettemplate2(template,data)
 {
- eval('var fn = '+buildtemplate(parsetemplate(template,'<?','?>')));
- return data ? fn(data) : fn;
+ try{
+  var fntext=buildtemplate(parsetemplate(template,'<?','?>'));
+  eval('var fn = '+fntext);
+ }
+ catch(e)
+ {
+  sys.puts(fntext);
+ }
+ return data ? fn(data) :"";
 }this.gettemplate2=gettemplate2;
 
 function doubletemplate(template,statictata) 
@@ -334,7 +341,7 @@ function parsedir(fs,parsedirname,dataobject)
 }this.parsedir=parsedir;
 
 /////////
-function loadfile(file,dataobject,basedir)
+function loadfile(fs,file,dataobject,basedir)
 {
  if(basedir==null) basedir=dir;
  //example:
