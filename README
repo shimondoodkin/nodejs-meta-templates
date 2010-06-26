@@ -7,7 +7,7 @@
  a template that processed twice, 
  * 1st time prepeared with static data 
  * 2nd time - each time a request is made.
- * the template is compiled at runtime when preloaded in to a simple javascript funciton. 
+ the template is compiled at runtime when preloaded in to a simple javascript funciton. 
 
  my requirement was a minimal learning curve.
  the template is planed for nodejs to be prepeared once and used many times 
