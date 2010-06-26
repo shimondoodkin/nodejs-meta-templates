@@ -4,23 +4,28 @@
  I have checked many templates and not found a really stright forwared simple templets script.
  So i decided to write my own.
  
- The idea is to have a template like php mixed with html.
- A template that processed twice: 
- * 1st time prepeared with static data 
- * 2nd time - each time a request is made.
+The idea is to have a template like php mixed with html.
+
+A template that processed twice: 
+
+* 1st time prepeared with static data 
+* 2nd time - each time a request is made.
 
  The template is compiled at runtime when preloaded in to a simple javascript funciton. 
 
  My requirement was a minimal learning curve.
+
  The template is planed for nodejs to be prepeared once and used many times.
 
  I decided on `<??>` tags for runtime part of the template.
+
  I decided on `<%%>` tags for prepeare part of the template.
 
 ### example template:
       hello <? if(myvar) { ?><?=myvar?><? } else { ?> world<? }?>
 
  A complex template example with calling other template and recursion,
+
  A website with satic recusive menu and dynamic content in the center
 
      <html>
