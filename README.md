@@ -1,32 +1,38 @@
-## Meta templates / Double Template for Node.js by Shimon Doodkin, helpmepro1@gmail.com http://github.com/shimondoodkin/nodejs-meta-templates
+## Meta templates / Double Template for Node.js
+ by Shimon Doodkin, helpmepro1@gmail.com http://github.com/shimondoodkin/nodejs-meta-templates
  
- i have checked many  templates and not found a really stright forwared simple templets script.
- so i decided to write my own.
+ I have checked many templates and not found a really stright forwared simple templets script.
+ So i decided to write my own.
  
- the idea is to have a template like php mixed with html
- a template that processed twice, 
+ The idea is to have a template like php mixed with html.
+ A template that processed twice: 
  * 1st time prepeared with static data 
  * 2nd time - each time a request is made.
- the template is compiled at runtime when preloaded in to a simple javascript funciton. 
 
- my requirement was a minimal learning curve.
- the template is planed for nodejs to be prepeared once and used many times 
+ The template is compiled at runtime when preloaded in to a simple javascript funciton. 
 
- i decided on `<??>` tags for runtime part of the template
- i decided on `<%%>` tags for prepeare part of the template
+ My requirement was a minimal learning curve.
+ The template is planed for nodejs to be prepeared once and used many times.
+
+ I decided on `<??>` tags for runtime part of the template.
+ I decided on `<%%>` tags for prepeare part of the template.
 
 ### example template:
       hello <? if(myvar) { ?><?=myvar?><? } else { ?> world<? }?>
 
- a complex template example with calling other template and recursion:
- a website with satic recusive menu and dynamic content in the center
+ A complex template example with calling other template and recursion,
+ A website with satic recusive menu and dynamic content in the center
 
      <html>
       <head><title>complex template example</title></head>
       <body>
        <table width="100%" border="0" cellspacing="0" cellpadding="0">
            <tr>
-             <td dir="rtl" style="padding:10px;text-align:right;direction:rtl"><?=content?></td>
+             <td dir="rtl" style="padding:10px;text-align:right;direction:rtl">
+             
+             <?=content?>
+             
+             </td>
              <td dir="rtl" width="225" bgcolor="#ccd5f4" style="padding:10px;text-align:right;direction:rtl">
               <%
                function print_menu(menu1)
@@ -44,7 +50,8 @@
                 }
                 return echo;
                }
-               echo+=print_menu(menu); // echo is defined in the begining of the function and returned at the end of the function. 
+               echo+=print_menu(menu); // echo is defined in the begining of the function 
+                                       // and returned at the end of the function. 
               %>
              </td>
            </tr>
@@ -60,7 +67,7 @@
 
 
 
-### to include in in nodejs i use:
+### to include in in nodejs I use:
       //  require.paths.unshift(__dirname); //make local paths accecible
       //  require('filename')  // include file - filename is without '.js' extention!!!
       // var fs = require('fs');    // lets open files
@@ -82,6 +89,6 @@ the code is in stright forward logic you can read it and understand how it works
 
 ### todo:
 to add parsing of first ; position for output shortcut tag to allow easyier convertion to non bloking style if needed.  
-later i plan to rewrite it to support html paritials with sizzle css selector. like styling html with paritial html.
-later i plan to enhance the api and the module structure.
-for now what i we have here is enought for me.
+later I plan to rewrite it to support html paritials with sizzle css selector. like styling html with paritial html.
+later I plan to enhance the api and the module structure.
+for now what I we have here is enought for me.
