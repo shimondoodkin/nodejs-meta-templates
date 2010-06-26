@@ -92,7 +92,7 @@ or
 the code is in stright forward logic you can read it and understand how it works.
 
 ### todo:
-* to add parsing of first ; position for output shortcut tag to allow easyier convertion to non bloking style if needed.  
+* to add parsing of first ; position for output shortcut tag to allow easier convertion to non bloking style if needed.  
 * later I plan to rewrite it to support html paritials with sizzle css selector. like styling html with paritial html.
 * later I plan to enhance the api and the module structure.
 for now what is here is enought for me.
