@@ -72,17 +72,14 @@ A template that processed twice:
 
 
 ### to include in in nodejs I use:
-      //  require.paths.unshift(__dirname); //make local paths accecible
-      //  require('filename')  // include file - filename is without '.js' extention!!!
-      // var fs = require('fs');    // lets open files
       var te = require('doubletemplate');  //load double teplate module
       var doubletemplate=te.doubletemplate; // export double template function to global
 
 ### example of useing `parsedir` function:
-      te.parsedir(fs,__dirname+'/templates',{'app':app});
+      te.parsedir(__dirname+'/templates',{'app':app});
 
 ### example of useing `loadfile` function:
-      te.loadfile(fs,__dirname+'/templates/filename.html',{'app':app},__dirname);
+      te.loadfile(__dirname+'/templates/filename.html',{'app':app},__dirname);
 
 ### in the code you can use:
       te.templates['subdir/filename.html']({'app':app});

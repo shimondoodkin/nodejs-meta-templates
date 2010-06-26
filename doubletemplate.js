@@ -58,16 +58,14 @@
 //</html>
 //
 
+var fs = require('fs');    // lets open files
 
 // to include in in nodejs i use:
-// //  require.paths.unshift(__dirname); //make local paths accecible
-// //  require('filename')  // include file - filename is without '.js' extention!!!
-// // var fs = require('fs');    // lets open files
 // var te = require('doubletemplate');  //load double teplate module
 // var doubletemplate=te.doubletemplate; // export double template function to global
 
 //example of useing parsedir function:
-// te.parsedir(fs,__dirname+'/templates',{'app':app});
+// te.parsedir(__dirname+'/templates',{'app':app});
 
 //in the code you use:
 // te.templates['subdir/filename.html']({'app':app});
@@ -295,7 +293,7 @@ function doubletemplate(template,statictata)
 //run recusivly on a directory to load all templates in it.
 
 var templates={}; this.templates=templates;
-function parsedir(fs,parsedirname,dataobject)
+function parsedir(parsedirname,dataobject)
 {
  //example:
  // te.parsedir(__dirname+'/templates',{'app':app});
@@ -341,7 +339,7 @@ function parsedir(fs,parsedirname,dataobject)
 }this.parsedir=parsedir;
 
 /////////
-function loadfile(fs,file,dataobject,basedir)
+function loadfile(file,dataobject,basedir)
 {
  if(basedir==null) basedir=dir;
  //example:
@@ -365,3 +363,9 @@ function loadfile(fs,file,dataobject,basedir)
    }
   });
 }this.loadfile=loadfile;
+
+/////////
+function loadtemplate(file,dataobject)
+{
+ return doubletemplate(fs.readFileSync(file_on_callback),dataobject);
+}this.loadtemplate=loadtemplate;
