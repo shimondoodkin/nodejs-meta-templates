@@ -367,5 +367,5 @@ function loadfile(file,dataobject,basedir)
 /////////
 function loadtemplate(file,dataobject)
 {
- return doubletemplate(fs.readFileSync(file_on_callback),dataobject);
+ return doubletemplate(fs.readFileSync(file),dataobject);
 }this.loadtemplate=loadtemplate;

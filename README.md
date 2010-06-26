@@ -75,17 +75,20 @@ A template that processed twice:
       var te = require('doubletemplate');  //load double teplate module
       var doubletemplate=te.doubletemplate; // export double template function to global
 
-### example of useing `parsedir` function:
+### example of using `parsedir` function:
       te.parsedir(__dirname+'/templates',{'app':app});
 
-### example of useing `loadfile` function:
+### example of using `loadfile` function:
       te.loadfile(__dirname+'/templates/filename.html',{'app':app},__dirname);
 
 ### in the code you can use:
-      te.templates['subdir/filename.html']({'app':app});
+      te.templates['subdir/filename.html']({name:'your name'});
+
+### example of using `loadtemplate` function:
+      var mytemplate=te.loadtemplate(__dirname+'/templates/filename.html',{'app':app});
+      mytemplate({name:'your name'});
 
 the code is in stright forward logic you can read it and understand how it works.
-
 
 ### todo:
 * to add parsing of first ; position for output shortcut tag to allow easyier convertion to non bloking style if needed.  
