@@ -59,6 +59,7 @@
 //
 
 var fs = require('fs');    // lets open files
+var sys = require('sys');    // lets open files
 
 // to include in in nodejs i use:
 // var te = require('doubletemplate');  //load double teplate module
@@ -231,7 +232,7 @@ function parsetemplate(str,opentag,closetag)
 
 function buildtemplate(template, templatename)
 {
- 
+
  //build template function, return it as string
  var result="";
  result+=" function(vars,localstate) { ";  // define function
@@ -252,6 +253,7 @@ function buildtemplate(template, templatename)
  result+=" }catch(e){ echo+=\"\\r\\nerror in template: "+templatename+"\\r\\n\"; echo+=e.stack;} "; // catch the error
  result+=" return echo; "; // return echo variable
  result+=" } "; // end function definition
+
  return  result;
 }this.buildtemplate=buildtemplate;
 
@@ -265,20 +267,22 @@ function gettemplate1(template,data)
  {
   sys.puts(fntext);
  }
- return data ? fn(data) :"";
+ return data ? fn(data) :fn;
 }this.gettemplate1=gettemplate1;
 
 function gettemplate2(template,data)
 {
+ 
  try{
-  var fntext=buildtemplate(parsetemplate(template,'<?','?>'));
+  var par=parsetemplate(template,'<?','?>');
+  var fntext=buildtemplate(par);
   eval('var fn = '+fntext);
  }
  catch(e)
  {
   sys.puts(fntext);
  }
- return data ? fn(data) :"";
+ return data ? fn(data) :fn;
 }this.gettemplate2=gettemplate2;
 
 function doubletemplate(template,statictata) 
@@ -287,6 +291,21 @@ function doubletemplate(template,statictata)
  if(!statictata) statictata={};
  return gettemplate2(  gettemplate1(template,statictata) ,statictata);
 }this.doubletemplate=doubletemplate;
+
+function doubletemplate(template,statictata,dynamicdata) 
+{
+ //implement double templates idea: one for static data, one for dynamic data
+ if(!statictata) statictata={};
+ return  gettemplate2( gettemplate1(template,statictata) , dynamicdata );
+}this.doubletemplate=doubletemplate;
+
+
+function prepeare(function_template,statictata) 
+{
+ //implement double templates idea: one for static data, one for dynamic data
+ if(!statictata) statictata={};
+ return gettemplate2(  function_template(statictata) ,statictata);
+}this.prepeare=prepeare;
 
 
 //run recusivly on a directory to load all templates in it.
@@ -357,7 +376,7 @@ function loadfile(file,dataobject,basedir)
     var fileext=file_on_callback.substr(file_on_callback.length-4).toLowerCase()
     if( fileext=='.htm' || fileext=='html'  )
     {
-     templates[file_on_callback.substr(basedir.length+1)]=doubletemplate(fs.readFileSync(file_on_callback),dataobject);
+     templates[file_on_callback.substr(basedir.length+1)]=doubletemplate(fs.readFileSync(file_on_callback, encoding='utf8'),dataobject);
     }
    }
   });
@@ -366,5 +385,5 @@ function loadfile(file,dataobject,basedir)
 /////////
 function loadtemplate(file,dataobject)
 {
- return doubletemplate(fs.readFileSync(file),dataobject);
+ return doubletemplate(fs.readFileSync(file, encoding='utf8'),dataobject);
 }this.loadtemplate=loadtemplate;
