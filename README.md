@@ -77,17 +77,17 @@ or
       var loadtemplate=require('doubletemplate').loadtemplate; // only load template function
 
 ### example of using `parsedir` function:
-      te.parsedir(__dirname+'/templates',{'app':app});
+      te.parsedir(__dirname+'/templates',this,{'app':app});
 
 ### example of using `loadfile` function:
-      te.loadfile(__dirname+'/templates/filename.html',{'app':app},__dirname);
+      te.loadfile(__dirname+'/templates/filename.html',this,{'app':app},__dirname);
 
 ### in the code you can use:
-      te.templates['subdir/filename.html']({name:'your name'});
+      te.templates['subdir/filename.html'].call(this,{name:'your name'});
 
 ### example of using `loadtemplate` function:
-      var mytemplate=te.loadtemplate(__dirname+'/templates/filename.html',{'app':app});
-      mytemplate({name:'your name'});
+      var mytemplate=te.loadtemplate(__dirname+'/templates/filename.html',this,{'app':app});
+      mytemplate.call(this,{name:'your name'});
 
 the code is in stright forward logic you can read it and understand how it works.
 
