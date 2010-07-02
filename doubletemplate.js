@@ -131,7 +131,6 @@ function parsetemplate(str,opentag,closetag)
        continue;
       }
      }
-     
      intag=true;
      tagstart=i-opentag_length;
      codestart=i;
@@ -160,26 +159,27 @@ function parsetemplate(str,opentag,closetag)
     continue;
    }
   }
+
   // match close tag
   // developed 4th
   if(intag && !instring1 && !instring2 && !incommentfull ) /* removed: && !incommentline - we might be in a comment line */
   {
-   if(str.substring(i-closetag_length,i)==closetag)
+   if(str.substring(i-closetag_length+1,i+1)==closetag)
    {
-    codeend=i-opentag_length;
+    codeend=i-opentag_length+1;
     tagend=i;
     result[result.length]={type:isshortcuttag?'shortcut':'code',s:codestart,e:codeend,data:str.substring(codestart,codeend)}; // add the result to array 
     intag=false;instring1=false;instring2=false;incommentfull=false;incommentline=false;
     codeend=-1; //to get a runtime error if i do any misstake later
     tagend =-1; //...
-    textstart=i; 
+    textstart=i+1; 
     textend=-1  //...
     isshortcuttag=false;
     previuschar=currentchar;
     continue;
    }
   }
-
+  
   // match ignore sematics
   if(intag) // developed 2nd
   {
@@ -232,19 +232,20 @@ function parsetemplate(str,opentag,closetag)
 
 function buildtemplate(template, templatename)
 {
+ //sys.puts(sys.inspect(template));
 
  //build template function, return it as string
  var result="";
- result+=" function(vars,localstate) { ";  // define function
- result+="  var echo=''; "; // returned text variable 
+ result+=" function(vars) { ";  // define function
+ result+="  var vars_i,echo=''; "; // returned text variable 
  //result+="  for(vars_i in vars) this[vars_i]=vars[vars_i]; "; // make items of vars local variables (i hope it works)
  result+="  for(vars_i in vars) { eval('var '+vars_i+'=vars[vars_i];'); } "; // make items of vars local variables // this might work better the the one above
  
  result+="  try { \r\n"; //add try to catch errors and not crush the entire application 
- 
+ var i,template_length;
  for(i=0,template_length=template.length;i<template_length;i++)
  {
-  if(template[i]['type']=='code')     result+=               template[i]['data'] + '; \r\n';
+  if(template[i]['type']=='code')     result+=            template[i]['data'] + '; \r\n';
   if(template[i]['type']=='shortcut') result+= ' echo+='+ template[i]['data'] + '; \r\n';
   if(template[i]['type']=='text')     result+= ' echo+='+ JSON.stringify(template[i]['data']) +'; \r\n';
  }
@@ -253,12 +254,13 @@ function buildtemplate(template, templatename)
  result+=" }catch(e){ echo+=\"\\r\\nerror in template: "+templatename+"\\r\\n\"; echo+=e.stack;} "; // catch the error
  result+=" return echo; "; // return echo variable
  result+=" } "; // end function definition
-
+ 
  return  result;
 }this.buildtemplate=buildtemplate;
 
-function gettemplate1(template,data)
+function gettemplate1(template,this_of_template,data)
 {
+ if(!this_of_template)this_of_template=this;
  try{
   var fntext=buildtemplate(parsetemplate(template,'<%','%>'));
   eval('var fn = '+fntext);
@@ -267,12 +269,12 @@ function gettemplate1(template,data)
  {
   sys.puts(fntext);
  }
- return data ? fn(data) :fn;
+ return data ? fn.call(this_of_template,data) :fn;
 }this.gettemplate1=gettemplate1;
 
-function gettemplate2(template,data)
+function gettemplate2(template,this_of_template,data)
 {
- 
+ if(!this_of_template)this_of_template=this;
  try{
   var par=parsetemplate(template,'<?','?>');
   var fntext=buildtemplate(par);
@@ -282,36 +284,27 @@ function gettemplate2(template,data)
  {
   sys.puts(fntext);
  }
- return data ? fn(data) :fn;
+ return data ? fn.call(this_of_template,data) :fn;
 }this.gettemplate2=gettemplate2;
 
-function doubletemplate(template,statictata) 
+function doubletemplate(template,this_of_template,statictata) 
 {
  //implement double templates idea: one for static data, one for dynamic data
  if(!statictata) statictata={};
- return gettemplate2(  gettemplate1(template,statictata) ,statictata);
+ return gettemplate2(  gettemplate1(template,this_of_template,statictata),this_of_template);
 }this.doubletemplate=doubletemplate;
 
-function doubletemplate(template,statictata,dynamicdata) 
+function prepeare(function_template,this_of_template,statictata) 
 {
  //implement double templates idea: one for static data, one for dynamic data
- if(!statictata) statictata={};
- return  gettemplate2( gettemplate1(template,statictata) , dynamicdata );
-}this.doubletemplate=doubletemplate;
-
-
-function prepeare(function_template,statictata) 
-{
- //implement double templates idea: one for static data, one for dynamic data
- if(!statictata) statictata={};
- return gettemplate2(  function_template(statictata) ,statictata);
+ return gettemplate2(  function_template.call(this_of_template,statictata),this_of_template ,statictata);
 }this.prepeare=prepeare;
 
 
 //run recusivly on a directory to load all templates in it.
 
 var templates={}; this.templates=templates;
-function parsedir(parsedirname,dataobject)
+function parsedir(parsedirname,this_of_template,dataobject)
 {
  //example:
  // te.parsedir(__dirname+'/templates',{'app':app});
@@ -341,7 +334,7 @@ function parsedir(parsedirname,dataobject)
        var fileext=file_on_callback.substr(file_on_callback.length-4).toLowerCase()
        if( fileext=='.htm' || fileext=='html'  )
        {
-        templates[file_on_callback.substr(basedir.length+1)]=doubletemplate(fs.readFileSync(file_on_callback),dataobject);
+        templates[file_on_callback.substr(basedir.length+1)]=doubletemplate(fs.readFileSync(file_on_callback),this_of_template,dataobject);
         //debuging:
         //app.templates[file_on_callback.substr(basedir.length+1)]=buildtemplate(parsetemplate(fs.readFileSync(file_on_callback),'<%','%>'));
         //sys.puts("//template: "+file_on_callback.substr(basedir.length+1));
@@ -357,7 +350,7 @@ function parsedir(parsedirname,dataobject)
 }this.parsedir=parsedir;
 
 /////////
-function loadfile(file,dataobject,basedir)
+function loadfile(file,this_of_template,dataobject,basedir)
 {
  if(basedir==null) basedir=dir;
  //example:
@@ -376,14 +369,14 @@ function loadfile(file,dataobject,basedir)
     var fileext=file_on_callback.substr(file_on_callback.length-4).toLowerCase()
     if( fileext=='.htm' || fileext=='html'  )
     {
-     templates[file_on_callback.substr(basedir.length+1)]=doubletemplate(fs.readFileSync(file_on_callback, encoding='utf8'),dataobject);
+     templates[file_on_callback.substr(basedir.length+1)]=doubletemplate(fs.readFileSync(file_on_callback, encoding='utf8'),this_of_template,dataobject);
     }
    }
   });
 }this.loadfile=loadfile;
 
 /////////
-function loadtemplate(file,dataobject)
+function loadtemplate(file,this_of_template,dataobject)
 {
- return doubletemplate(fs.readFileSync(file, encoding='utf8'),dataobject);
+ return doubletemplate(fs.readFileSync(file, encoding='utf8'),this_of_template,dataobject);
 }this.loadtemplate=loadtemplate;
