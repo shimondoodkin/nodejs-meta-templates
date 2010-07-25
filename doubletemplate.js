@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////
 //
 // Double Template for Node.js by Shimon Doodkin, helpmepro1@gmail.com
+// license: It's released under a BSD style license 
 //
 // http://github.com/shimondoodkin/nodejs-meta-templates
 //
@@ -75,11 +76,9 @@ var sys = require('sys');    // lets open files
 
 // the code is in stright forward logic you can read it and understand how it works.
 
-function parsetemplate(str,opentag,closetag)
+function parsetemplate(str,opentag,closetag,filename)
 {
- //license: public domain, by Shimon Doodkin. http://kodtov.com helpmepro1@gmail.com
-
-
+ // license: It's released under a BSD style license, by Shimon Doodkin. http://kodtov.com helpmepro1@gmail.com 
  // this function chunks a string into an array 
  // obeing javascript syntax codes, strings and comments
  //
@@ -101,6 +100,10 @@ function parsetemplate(str,opentag,closetag)
  //supports skip <?xml open tag if opentag is <? 
  //supports print out shourtcut  <?=
  
+  var debugme;
+  debugme=false;
+  //debugme=(filename=='/var/www/nodejs-mongodb-app/templates/default/add.html');
+ 
  var result=[];//developed 5th - i used http://jsbeautifier.org/ to debug output
  var intag=false,instring1=false,instring2=false,inbackslash=0,incommentfull=false,incommentline=false,
      previuschar="",currentchar="",nextchar="",opentag_length=opentag.length,closetag_length=closetag.length,
@@ -113,15 +116,18 @@ function parsetemplate(str,opentag,closetag)
   // match open tag
   if(!instring1 && !instring2 && !incommentfull && !incommentline) // developed 3rd
   {
-   //sys.puts('['+i+'] opentag match '+opentag+'=\''+str.substring(i-opentag_length,i)+"'");
+   //if(debugme)
+   // sys.puts('['+i+'] opentag match '+opentag+'=\''+str.substring(i-opentag_length,i)+"'");
    if(str.substring(i-opentag_length,i)==opentag) // developed 1st
    {
-    //sys.puts('['+i+'] opentag matched');
+    // if(debugme)
+    //  sys.puts('['+i+'] opentag matched');
          if(intag && instring1) {} // ignore while in string
     else if(intag && instring2) {} // ignore while in string
     else if(!intag)  // mark start
     {
-    
+     //if(debugme)
+     // sys.puts('['+i+'] opentag ok');
      //support ignore opentag '<?' + 'xml' at the begining
      if(opentag=='<?') //developed 7th
      {
@@ -133,11 +139,15 @@ function parsetemplate(str,opentag,closetag)
      }
      intag=true;
      tagstart=i-opentag_length;
+     // if(debugme)
+     // sys.puts('['+i+'] opentag pos '+tagstart);
      codestart=i;
      textend=tagstart;
+     // if(debugme)
      //sys.puts('['+i+'] textstart'+textstart+'textend'+textend);
      if(textend-textstart>0)
      {
+      // if(debugme)
       //sys.puts('['+i+'] text added');
       result[result.length]={type:'text',s:textstart,e:textend,data:str.substring(textstart,textend)}; // add the result to array 
      }
@@ -164,8 +174,13 @@ function parsetemplate(str,opentag,closetag)
   // developed 4th
   if(intag && !instring1 && !instring2 && !incommentfull ) /* removed: && !incommentline - we might be in a comment line */
   {
+   //if(debugme)
+   // sys.puts('['+i+'] closetag match '+closetag+'=\''+str.substring(i-opentag_length,i)+"'");
    if(str.substring(i-closetag_length+1,i+1)==closetag)
    {
+    //if(debugme)
+    // sys.puts('['+i+'] closetag ');
+     
     codeend=i-opentag_length+1;
     tagend=i;
     result[result.length]={type:isshortcuttag?'shortcut':'code',s:codestart,e:codeend,data:str.substring(codestart,codeend)}; // add the result to array 
@@ -185,6 +200,9 @@ function parsetemplate(str,opentag,closetag)
   {
    if( !incommentfull && !incommentline )
    {
+    //if(debugme)
+    // sys.puts('['+i+'] n incomment '+(instring1?'s1t ':'s1f ')+(instring2?'s2t ':'s2f '));
+
     if(inbackslash==2)inbackslash=0;
     //open tags
     // we can enter into a string only if we are not in a string and only if we are in a code. 
@@ -210,10 +228,11 @@ function parsetemplate(str,opentag,closetag)
    }
    else //continue close oppened tags
    {
-  //  result[result.length]={type:'debug','i':i,'currentchar':currentchar,'previuschar':previuschar}; // add the result to array
-    
+    //  result[result.length]={type:'debug','i':i,'currentchar':currentchar,'previuschar':previuschar}; // add the result to array
+    //if(debugme)
+    // sys.puts('['+i+'] incomment ');
          if(intag && incommentfull && currentchar=='/'  && previuschar=='*'  ) {incommentfull=false;}
-    else if(intag && !incommentfull && incommentline && currentchar=='\r' || currentchar=='\n' ) {incommentline=false;}
+    else if(intag && !incommentfull && incommentline && (currentchar=='\r' || currentchar=='\n') ) {incommentline=false;}
    }
   }
   previuschar=currentchar;
@@ -236,7 +255,7 @@ function buildtemplate(template, templatename)
 
  //build template function, return it as string
  var result="";
- result+=" function(vars) { ";  // define function
+ result+=" //"+templatename+"\r\n function(vars,callback) { ";  // define function
  result+="  var vars_i,echo=''; "; // returned text variable 
  //result+="  for(vars_i in vars) this[vars_i]=vars[vars_i]; "; // make items of vars local variables (i hope it works)
  result+="  for(vars_i in vars) { eval('var '+vars_i+'=vars[vars_i];'); } "; // make items of vars local variables // this might work better the the one above
@@ -252,52 +271,54 @@ function buildtemplate(template, templatename)
  
  if(!templatename)templatename=''; 
  result+=" }catch(e){ echo+=\"\\r\\nerror in template: "+templatename+"\\r\\n\"; echo+=e.stack;} "; // catch the error
- result+=" return echo; "; // return echo variable
+ result+="  if(!callback) return echo; else callback(echo); "; // return echo variable
  result+=" } "; // end function definition
+ 
+ //print_r the result
+ //if(debugme) { sys.puts("template:  "+filename); sys.puts(sys.inspect(parsed)); }
  
  return  result;
 }this.buildtemplate=buildtemplate;
 
-function gettemplate1(template,this_of_template,data)
+function gettemplate1(template,filename,this_of_template,data)
 {
  if(!this_of_template)this_of_template=this;
  try{
-  var fntext=buildtemplate(parsetemplate(template,'<%','%>'));
-  eval('var fn = '+fntext);
+  var fntext=buildtemplate(parsetemplate(template,'<%','%>',filename),filename);
+  eval('var fn = '+fntext,filename);
  }
  catch(e)
  {
-  sys.puts(fntext);
+  sys.puts(e.message+"\r\n\r\n"+fntext);
  }
  return data ? fn.call(this_of_template,data) :fn;
 }this.gettemplate1=gettemplate1;
 
-function gettemplate2(template,this_of_template,data)
+function gettemplate2(template,filename,this_of_template,data)
 {
  if(!this_of_template)this_of_template=this;
  try{
-  var par=parsetemplate(template,'<?','?>');
-  var fntext=buildtemplate(par);
-  eval('var fn = '+fntext);
+  var fntext=buildtemplate(parsetemplate(template,'<?','?>'),filename);
+  eval('var fn = '+fntext,filename);
  }
  catch(e)
  {
-  sys.puts(fntext);
+  sys.puts(e.message+"\r\n\r\n"+fntext);
  }
  return data ? fn.call(this_of_template,data) :fn;
 }this.gettemplate2=gettemplate2;
 
-function doubletemplate(template,this_of_template,statictata) 
+function doubletemplate(template,filename,this_of_template,statictata) 
 {
  //implement double templates idea: one for static data, one for dynamic data
  if(!statictata) statictata={};
- return gettemplate2(  gettemplate1(template,this_of_template,statictata),this_of_template);
+ return gettemplate2(  gettemplate1(template,filename,this_of_template,statictata),filename,this_of_template);
 }this.doubletemplate=doubletemplate;
 
-function prepeare(function_template,this_of_template,statictata) 
+function prepeare(function_template,filename,this_of_template,statictata) 
 {
  //implement double templates idea: one for static data, one for dynamic data
- return gettemplate2(  function_template.call(this_of_template,statictata),this_of_template ,statictata);
+ return gettemplate2(  function_template.call(this_of_template,statictata),filename,this_of_template ,statictata);
 }this.prepeare=prepeare;
 
 
@@ -334,7 +355,7 @@ function parsedir(parsedirname,this_of_template,dataobject)
        var fileext=file_on_callback.substr(file_on_callback.length-4).toLowerCase()
        if( fileext=='.htm' || fileext=='html'  )
        {
-        templates[file_on_callback.substr(basedir.length+1)]=doubletemplate(fs.readFileSync(file_on_callback),this_of_template,dataobject);
+        templates[file_on_callback.substr(basedir.length+1)]=doubletemplate(fs.readFileSync(file_on_callback),file_on_callback,this_of_template,dataobject);
         //debuging:
         //app.templates[file_on_callback.substr(basedir.length+1)]=buildtemplate(parsetemplate(fs.readFileSync(file_on_callback),'<%','%>'));
         //sys.puts("//template: "+file_on_callback.substr(basedir.length+1));
@@ -369,7 +390,7 @@ function loadfile(file,this_of_template,dataobject,basedir)
     var fileext=file_on_callback.substr(file_on_callback.length-4).toLowerCase()
     if( fileext=='.htm' || fileext=='html'  )
     {
-     templates[file_on_callback.substr(basedir.length+1)]=doubletemplate(fs.readFileSync(file_on_callback, encoding='utf8'),this_of_template,dataobject);
+     templates[file_on_callback.substr(basedir.length+1)]=doubletemplate(fs.readFileSync(file_on_callback, encoding='utf8'),file_on_callback,this_of_template,dataobject);
     }
    }
   });
@@ -378,5 +399,110 @@ function loadfile(file,this_of_template,dataobject,basedir)
 /////////
 function loadtemplate(file,this_of_template,dataobject)
 {
- return doubletemplate(fs.readFileSync(file, encoding='utf8'),this_of_template,dataobject);
+ return doubletemplate(fs.readFileSync(file, encoding='utf8'),file,this_of_template,dataobject);
 }this.loadtemplate=loadtemplate;
+
+// it lets you have mater tempalte applied in the later step
+/////////load only the 1st stage of the template loading, 
+//   to complete it later with second step, use:
+//  doubletempaltes.prepeare(function_template,this_of_template,statictata)
+// but this does not works with user's 2nd stepped templates, so i did not used it, isted i did 2 template calls; 
+function loadtemplate1(file,this_of_template,statictata) //loadtemplate unprepeared
+{
+ return gettemplate1(fs.readFileSync(file, encoding='utf8'),file,this_of_template);
+}this.loadtemplate1=loadtemplate1;
+
+//htmlspecialchars htmlencode
+function htmlencode( str ) {
+  if(!str) return str;
+  if(!str.replace) return str;
+  c = {'<':'&lt;', '>':'&gt;', '&':'&amp;', '"':'&quot;', "'":'&#039;', '#':'&#035;' };
+  return str.replace( /[<&>'"#]/g, function(s) { return c[s]; } );
+} this.htmlencode=htmlencode;
+
+
+function strip_tags (str, allowed_tags) {
+    // http://kevin.vanzonneveld.net
+    // +   original by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+    // +   improved by: Luke Godfrey
+    // +      input by: Pul
+    // +   bugfixed by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+    // +   bugfixed by: Onno Marsman
+    // +      input by: Alex
+    // +   bugfixed by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+    // +      input by: Marc Palau
+    // +   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+    // +      input by: Brett Zamir (http://brett-zamir.me)
+    // +   bugfixed by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+    // +   bugfixed by: Eric Nagel
+    // +      input by: Bobby Drake
+    // +   bugfixed by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+    // +   bugfixed by: Tomasz Wesolowski
+    // *     example 1: strip_tags('<p>Kevin</p> <br /><b>van</b> <i>Zonneveld</i>', '<i><b>');
+    // *     returns 1: 'Kevin <b>van</b> <i>Zonneveld</i>'
+    // *     example 2: strip_tags('<p>Kevin <img src="someimage.png" onmouseover="someFunction()">van <i>Zonneveld</i></p>', '<p>');
+    // *     returns 2: '<p>Kevin van Zonneveld</p>'
+    // *     example 3: strip_tags("<a href='http://kevin.vanzonneveld.net'>Kevin van Zonneveld</a>", "<a>");
+    // *     returns 3: '<a href='http://kevin.vanzonneveld.net'>Kevin van Zonneveld</a>'
+    // *     example 4: strip_tags('1 < 5 5 > 1');
+    // *     returns 4: '1 < 5 5 > 1'
+
+    var key = '', allowed = false;
+    var matches = [];
+    var allowed_array = [];
+    var allowed_tag = '';
+    var i = 0;
+    var k = '';
+    var html = '';
+
+    var replacer = function (search, replace, str) {
+        return str.split(search).join(replace);
+    };
+
+    // Build allowes tags associative array
+    if (allowed_tags) {
+        allowed_array = allowed_tags.match(/([a-zA-Z0-9]+)/gi);
+    }
+
+    str += '';
+
+    // Match tags
+    matches = str.match(/(<\/?[\S][^>]*>)/gi);
+
+    // Go through all HTML tags
+    for (key in matches) {
+        if (isNaN(key)) {
+            // IE7 Hack
+            continue;
+        }
+
+        // Save HTML tag
+        html = matches[key].toString();
+
+        // Is tag not in allowed list? Remove from str!
+        allowed = false;
+
+        // Go through all allowed tags
+        for (k in allowed_array) {
+            // Init
+            allowed_tag = allowed_array[k];
+            i = -1;
+
+            if (i != 0) { i = html.toLowerCase().indexOf('<'+allowed_tag+'>');}
+            if (i != 0) { i = html.toLowerCase().indexOf('<'+allowed_tag+' ');}
+            if (i != 0) { i = html.toLowerCase().indexOf('</'+allowed_tag)   ;}
+
+            // Determine
+            if (i == 0) {
+                allowed = true;
+                break;
+            }
+        }
+
+        if (!allowed) {
+            str = replacer(html, "", str); // Custom replace. No regexing
+        }
+    }
+
+    return str;
+} this.strip_tags=strip_tags;

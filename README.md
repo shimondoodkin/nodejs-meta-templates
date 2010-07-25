@@ -92,9 +92,41 @@ or
 the code is in stright forward logic you can read it and understand how it works.
 
 ### todo:
+* move template functions to this module from parent project nodejs-mongo-app\app-skeleton.js function loadtempalte, function loadtempalte1;
 * to add parsing of first ; position for output shortcut tag to allow easier convertion to non bloking style if needed.  
 * later I plan to rewrite it to support html paritials with sizzle css selector. like styling html with paritial html.
 * later I plan to enhance the api and the module structure.
 for now what is here is enought for me.
+
+### common tricks solutions:
+
+unclosed quotes in javascript may lead to show the source of the template in a full or in a paritial way.
+
+have a page object and app object, example will be added later as used in nodejs-mongo-app.
+
+load tampaltes on in the prepere strage. 
+
+use .call to change the object of this of the function:
+##
+    templatefunction.call(newthis,{});  
+
+
+the wrapper is a fun part of this templates system,
+it allows adding a wraper and receive a solid function after the template is prepered.
+and you can use it many times,
+
+## example:
+
+    <%
+    this.load1('listgrid','paritials/listgrid.html'); // load a template
+    
+    echo+=this.listgrid({'app':app,'page':page,'model_name':'model1','model':model1,'cursor_name':'cursor1'}); // run loaded template
+    
+    echo=app.templates.admin.call(page,this._.replace(vars,{'content':echo}));  //this is a wrapper,
+    
+    // the result varibale called echo so you can play with it:
+    // save it,clear it , acamulate again, change it , restore it appaned the changed ..., 
+    // and so you have a wrapper. a good idea only use it in the preperaring step only.
+    %>
 
 by Shimon Doodkin, helpmepro1@gmail.com http://github.com/shimondoodkin/nodejs-meta-templates
