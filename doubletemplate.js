@@ -258,7 +258,7 @@ function buildtemplate(template, templatename)
  result+=" //"+templatename+"\r\n function(vars,callback) { ";  // define function
  result+="  var vars_i,echo=''; "; // returned text variable 
  //result+="  for(vars_i in vars) this[vars_i]=vars[vars_i]; "; // make items of vars local variables (i hope it works)
- result+="  for(vars_i in vars) { eval('var '+vars_i+'=vars[vars_i];'); } "; // make items of vars local variables // this might work better the the one above
+ result+="  for(vars_i in vars) { eval('var '+vars_i+'=vars[vars_i];'); }; "; // make items of vars local variables // this might work better the the one above
  
  result+="  try { \r\n"; //add try to catch errors and not crush the entire application 
  var i,template_length;

@@ -102,11 +102,13 @@ for now what is here is enought for me.
 
 unclosed quotes in javascript may lead to show the source of the template in a full or in a paritial way.
 
-have a page object and app object, example will be added later as used in nodejs-mongo-app.
+if it tells you unexpected token ">" it might mean that there is a missing question mark "?" before it, and it is a part of "?>"
 
-load tampaltes on in the prepere strage. 
+if you get a duplicate page header and footer like 3 to 8 times it might be becuse you have an extra spontaneous html </div> tag at the bottom, it is just becuase chrome randers it badly, chrome creates a new extra div tag similar to a one in that place, to createa an openning tag for the spontaneous close tag.
 
-use .call to change the object of this of the function:
+it might help to have a page object and app object, example will be added later as used in nodejs-mongo-app.
+
+to load tampaltes on in the prepere strage. use .call to change the object of this of the function:
 ##
     templatefunction.call(newthis,{});  
 
