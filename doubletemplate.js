@@ -61,7 +61,7 @@
 
 var fs = require('fs');    // lets open files
 var sys = require('sys');    // lets open files
-
+var Script = process.binding('evals').Script;
 // to include in in nodejs i use:
 // var te = require('doubletemplate');  //load double teplate module
 
@@ -252,7 +252,7 @@ function parsetemplate(str,opentag,closetag,filename)
 function buildtemplate(template, templatename)
 {
  //sys.puts(sys.inspect(template));
-
+ 
  //build template function, return it as string
  var result="";
  result+=" //"+templatename+"\r\n function(vars,callback) { ";  // define function
@@ -270,7 +270,7 @@ function buildtemplate(template, templatename)
  }
  
  if(!templatename)templatename=''; 
- result+=" }catch(e){ echo+=\"\\r\\nerror in template: "+templatename+"\\r\\n\"; echo+=e.stack;} "; // catch the error
+ result+=" }catch(e){ echo+=\"\\r\\nerror in template: "+templatename+"\\r\\n\"; echo+=e.stack; console.log('\\r\\nerror in template: "+templatename+" \\r\\n'+e.stack+' \\r\\n function source:\\r\\n'+arguments.callee.toString()); } "; // catch the error
  result+="  if(!callback) return echo; else callback(echo); "; // return echo variable
  result+=" } "; // end function definition
  
@@ -284,12 +284,13 @@ function gettemplate1(template,filename,this_of_template,data)
 {
  if(!this_of_template)this_of_template=this;
  try{
-  var fntext=buildtemplate(parsetemplate(template,'<%','%>',filename),filename);
-  eval('var fn = '+fntext,filename);
+  var fntext=buildtemplate(parsetemplate(template,'<%','%>',filename),filename); 
+  Script.runInThisContext('var fn = '+fntext,  filename);
+  //eval('var fn = '+fntext,filename);
  }
  catch(e)
  {
-  sys.puts(e.message+"\r\n\r\n"+fntext);
+  console.log(e.message+"\r\n\r\n"+fntext);
  }
  return data ? fn.call(this_of_template,data) :fn;
 }this.gettemplate1=gettemplate1;
@@ -299,11 +300,12 @@ function gettemplate2(template,filename,this_of_template,data)
  if(!this_of_template)this_of_template=this;
  try{
   var fntext=buildtemplate(parsetemplate(template,'<?','?>'),filename);
-  eval('var fn = '+fntext,filename);
+  Script.runInThisContext('var fn = '+fntext,  filename);
+  //eval('var fn = '+fntext,filename);
  }
  catch(e)
  {
-  sys.puts(e.message+"\r\n\r\n"+fntext);
+  console.log(e.message+"\r\n\r\n"+e.stack+"\r\n\r\n"+fntext);
  }
  return data ? fn.call(this_of_template,data) :fn;
 }this.gettemplate2=gettemplate2;
