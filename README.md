@@ -92,7 +92,7 @@ or
 the code is in stright forward logic you can read it and understand how it works.
 
 ### todo:
-* move template functions to this module from parent project nodejs-mongo-app\app-skeleton.js function loadtempalte, function loadtempalte1;
+* add managed templates = reload templates automaticaly
 * to add parsing of first ; position for output shortcut tag to allow easier convertion to non bloking style if needed.  
 * later I plan to rewrite it to support html paritials with sizzle css selector. like styling html with paritial html.
 * later I plan to enhance the api and the module structure.
