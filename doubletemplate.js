@@ -16,7 +16,9 @@
 // i decided on <%%> tags for prepeare part of the template
 
 // example template:
-// hello <? if(myvar) { ?><?=myvar?><? } else { ?> world<? }?>
+// hello <? if(myvar) { ?><?=this.htmlencode(myvar)?><? } else { ?> world<? }?>
+// is the same as:
+// hello <? if(myvar) { ?><?:myvar?><? } else { ?> world<? }?>
 
 // complex template example with paritials and recursion:
 // a website with satic recusive menu and dynamic content in the center
@@ -37,7 +39,7 @@
 //            echo+='<?link='+JSON.stringify(link)+'?>';
 //            %>
 //            <ul>
-//             <li><a href="<?=link.href?>"><?=link.name?></a></li>
+//             <li><a href="<?=link.href?>"><?:link.name?></a></li>
 //             <%=print_menu(menu1)%>
 //            </ul>
 //            <%
@@ -58,9 +60,12 @@
 // </body>
 //</html>
 //
+var self=this;
+this.templates_path='';
 
 var fs = require('fs');    // lets open files
-var sys = require('sys');    // lets open files
+var sys = require('sys');    //
+var _ = require('deps/nodejs-clone-extend/merger');  //  lets do: _.extend(same,otherobjexts),  _.clone(obj) - creates new reference, see source to understand //
 var Script = process.binding('evals').Script;
 // to include in in nodejs i use:
 // var te = require('doubletemplate');  //load double teplate module
@@ -87,6 +92,7 @@ function parsetemplate(str,opentag,closetag,filename)
  // {type:'code'     ,s:2  ,e:9  ,data:'if(true){ name="you" ' },
  // {type:'text'     ,s:25 ,e:36 ,data:'hello '                },
  // {type:'shortcut' ,s:13 ,e:23 ,data:'myvar'                 },
+ // {type:'shortcut2' ,s:13 ,e:23 ,data:'myvar'                 },
  // {type:'code'     ,s:39  ,e:40  ,data:'}'                   }
  // ]
  
@@ -99,16 +105,36 @@ function parsetemplate(str,opentag,closetag,filename)
 
  //supports skip <?xml open tag if opentag is <? 
  //supports print out shourtcut  <?=
+ //supports print out shourtcut  <?:
  
   var debugme;
   debugme=false;
   //debugme=(filename=='/var/www/nodejs-mongodb-app/templates/default/add.html');
  
  var result=[];//developed 5th - i used http://jsbeautifier.org/ to debug output
- var intag=false,instring1=false,instring2=false,inbackslash=0,incommentfull=false,incommentline=false,
-     previuschar="",currentchar="",nextchar="",opentag_length=opentag.length,closetag_length=closetag.length,
-     isshortcuttag=false;
- var codestart,tagstart,codeend,tagend,textstart=0,textend=-1;
+ var intag=false,
+     instring1=false,
+     instring2=false,
+     inbackslash=0,
+     incommentfull=false,
+     incommentline=false,
+     
+     previuschar="",
+     currentchar="",
+     nextchar="",
+     opentag_length=opentag.length,
+     closetag_length=closetag.length,
+     
+     isshortcuttag=false,
+     isshortcuttag2=false;
+     
+ var codestart,
+     tagstart,
+     codeend,
+     tagend,
+     textstart=0,
+     textend=-1;
+     
  for(var i=opentag.length,str_length=str.length;i<str_length;i++)
  {
   currentchar=str.charAt(i);
@@ -131,6 +157,7 @@ function parsetemplate(str,opentag,closetag,filename)
      //support ignore opentag '<?' + 'xml' at the begining
      if(opentag=='<?') //developed 7th
      {
+      ///console.log("TTTT:"+filename+"'''"+str.substr(i+1,3));
       if(i+3<str_length&&str.substr(i+1,3)=='xml')
       {
        previuschar=currentchar;
@@ -163,6 +190,12 @@ function parsetemplate(str,opentag,closetag,filename)
       isshortcuttag=true;
       i++;
       codestart++;
+     }
+     else if(i<str_length&&str.charAt(i) == ':')
+     {
+      isshortcuttag2=true;
+      i++;
+      codestart++;
      } 
     }
     previuschar=currentchar;
@@ -183,13 +216,19 @@ function parsetemplate(str,opentag,closetag,filename)
      
     codeend=i-opentag_length+1;
     tagend=i;
-    result[result.length]={type:isshortcuttag?'shortcut':'code',s:codestart,e:codeend,data:str.substring(codestart,codeend)}; // add the result to array 
+    var type;
+    if(isshortcuttag2)     codetype='shortcut2';
+    else if(isshortcuttag) codetype='shortcut';
+    else                   codetype='code';
+
+    result[result.length]={type:codetype,s:codestart,e:codeend,data:str.substring(codestart,codeend)}; // add the result to array 
     intag=false;instring1=false;instring2=false;incommentfull=false;incommentline=false;
     codeend=-1; //to get a runtime error if i do any misstake later
     tagend =-1; //...
     textstart=i+1; 
     textend=-1  //...
     isshortcuttag=false;
+    isshortcuttag2=false;
     previuschar=currentchar;
     continue;
    }
@@ -266,11 +305,32 @@ function buildtemplate(template, templatename)
  {
   if(template[i]['type']=='code')     result+=            template[i]['data'] + '; \r\n';
   if(template[i]['type']=='shortcut') result+= ' echo+='+ template[i]['data'] + '; \r\n';
+  if(template[i]['type']=='shortcut2') result+= ' echo_tmp='+ template[i]['data'] + '; echo+=this.htmlencode(echo_tmp); \r\n';
   if(template[i]['type']=='text')     result+= ' echo+='+ JSON.stringify(template[i]['data']) +'; \r\n';
  }
  
  if(!templatename)templatename=''; 
- result+=" }catch(e){ echo+=\"\\r\\nerror in template: "+templatename+"\\r\\n\"; echo+=e.stack; console.log('\\r\\nerror in template: "+templatename+" \\r\\n'+e.stack+' \\r\\n function source:\\r\\n'+arguments.callee.toString()); } "; // catch the error
+ 
+ result+=" }catch(e){ ";
+ result+="  echo+=\"\\r\\nerror in template: "+templatename+"\\r\\n\";";
+ result+="  echo+=e.stack;";
+ 
+ result+="  console.log( ";   // console log value begin
+ 
+ result+="   '\\r\\nerror in template: "+templatename+" \\r\\n'+e.stack+' \\r\\n function source:\\r\\n'+"; // intro text
+ 
+ result+="   this.debug_add_line_numbers(";   // begin beutify code function(add line numbers to code and point to errors)
+              // debug_add_line_numbers( regex matches, function source );
+              
+              //give regex matches to debug_add_line_numbers
+ result+="    e.stack.match(new RegExp( \""+templatename+"\".replace(/([.*+?^${}()|[\\]\\/\\\\])/g, '\\\\$1')"; // escape regex chars of templatename, to use it as regexp
+ result+="                              +\"\\\\s*:\\\\s*(\\\\d+)\\\\s*:\\\\s*(\\\\d+)\",\"gm\")),"; // find templatename:(\d):(\d)  using regexp
+              //give this function source to debug_add_line_numbers
+ result+="    arguments.callee.toString())";
+ result+="   );";           // console log value end
+ 
+ result+="  } "; // catch the error
+ 
  result+="  if(!callback) return echo; else callback(echo); "; // return echo variable
  result+=" } "; // end function definition
  
@@ -279,6 +339,45 @@ function buildtemplate(template, templatename)
  
  return  result;
 }this.buildtemplate=buildtemplate;
+
+function debug_add_line_numbers(matches,text)
+{
+ function error_line(pos,charnum)
+ {
+  var r="####   ";
+  for (var a=0;a<charnum;a++) r+="_";
+  r+="^ ("+(pos+2)+","+charnum+")";
+  return r;
+ }
+ 
+ var lines=text.split(/\r?\n/);
+ 
+ var errs={}
+ for(var i=0;i<matches.length;i++)
+ {
+  var s=matches[0].split(":");
+  var pos=parseInt(s[s.length-2])-2;
+  var charnum=parseInt(s[s.length-1]);
+  errs[pos]=error_line(pos, charnum);
+ }
+
+ var out="";
+ for(var i=0,n=2,l=lines.length;i<l;i++,n++)
+ {
+  out+=n<1000?'0':'';
+  out+=n<100?'0':'';
+  out+=n<10?'0':'';
+  out+=n;
+  out+='   ';
+  out+=lines[i];
+  if(errs[i]) out+="\r\n"+errs[pos];
+  out+="\r\n";
+  if(lines[i].length>120)
+   out+="\r\n";
+ }
+ delete text;
+ return out;
+}this.debug_add_line_numbers=debug_add_line_numbers;
 
 function gettemplate1(template,filename,this_of_template,data)
 {
@@ -290,13 +389,14 @@ function gettemplate1(template,filename,this_of_template,data)
  }
  catch(e)
  {
-  console.log(e.message+"\r\n\r\n"+fntext);
+  console.log("Error in template inside <%%> tags \r\n"+e.message+"\r\n\r\n"+e.stack+"\r\n\r\n"+debug_add_line_numbers(fntext));
  }
  return data ? fn.call(this_of_template,data) :fn;
 }this.gettemplate1=gettemplate1;
 
 function gettemplate2(template,filename,this_of_template,data)
 {
+ //console.log(filename);
  if(!this_of_template)this_of_template=this;
  try{
   var fntext=buildtemplate(parsetemplate(template,'<?','?>'),filename);
@@ -305,7 +405,7 @@ function gettemplate2(template,filename,this_of_template,data)
  }
  catch(e)
  {
-  console.log(e.message+"\r\n\r\n"+e.stack+"\r\n\r\n"+fntext);
+  console.log("Error in template inside <%%> tags \r\n"+e.message+"\r\n\r\n"+e.stack+"\r\n\r\n"+debug_add_line_numbers(fntext));
  }
  return data ? fn.call(this_of_template,data) :fn;
 }this.gettemplate2=gettemplate2;
@@ -508,3 +608,183 @@ function strip_tags (str, allowed_tags) {
 
     return str;
 } this.strip_tags=strip_tags;
+
+/*
+    var example_templates_object= 
+    {
+     pagefilename:__filename,
+     load_templates: 
+     {
+      div:"viewfields/div.html",
+      image:"viewfields/image.html",
+     },
+     
+     prepeare_templates:  // function treated as templates function to prepeare
+     {
+      //template2:function template2(vars){...}, // function template to be prepeared here instantly= bad idea
+     },
+     prepere_data:function (page,template_name,callback) // required for prepeared templates
+     {
+      var data1 = { 'page': page, 'app': app, 'req': {}, };
+      callback(data1);
+     },
+    };
+    
+    result:
+    
+    var example_templates_object= 
+    {
+     pagefilename:__filename,
+     load_templates: 
+     {
+      div:"viewfields/div.html",
+      image:"viewfields/image.html",
+     },
+     
+     prepeare_templates:  // function treated as templates function to prepeare
+     {
+      //template2:function template2(vars){...}, // function template to be prepeared here instantly= bad idea
+     },
+     prepere_data:function (page,template_name,callback) // required for prepeared templates
+     {
+      var data1 = { 'page': page, 'app': app, 'req': {}, };
+      callback(data1);
+     },
+     
+     div  :function (vars,callback) {var echo; echo+="<div>"+vars.content+"</div>"; if(callback) callback(echo); else return echo;}
+     image:function (vars,callback) {var echo; echo+="<img src=\""+vars.src+"\">";     if(callback) callback(echo); else return echo;}
+    };
+*/
+
+this.load_templates1 = function (templates_object) // load unprepeared
+{
+   //   console.log(templates_object.pagefilename);
+   templates_object.htmlencode=htmlencode;
+   templates_object.debug_add_line_numbers=debug_add_line_numbers;
+   templates_object.load=function(tempalte_name,template_file)
+   {
+    if(templates_object[tempalte_name])
+     throw new Error('template '+tempalte_name+' already exists.');
+    else
+    {
+      //console.log('load template5 '+(templates_object.pagefilename?templates_object.pagefilename:'')+' - '+tempalte_name+'.');
+      templates_object[tempalte_name]=loadtemplate1(self.templates_path+template_file,templates_object);
+    }
+   }
+   templates_object._=_;
+   
+   var tempalte_name;
+   // load templates
+   if(templates_object.load_templates)
+   _.foreach(templates_object.load_templates,
+   function (template_file,tempalte_name)
+   {
+    var template_file=templates_object.load_templates[tempalte_name];
+    if(templates_object[tempalte_name])
+     throw new Error('template '+tempalte_name+' already exists.');
+    else
+     {
+      //console.log('load template6 '+(templates_object.pagefilename?templates_object.pagefilename:'')+' - '+tempalte_name+'.');
+      templates_object[tempalte_name]=loadtemplate1(self.templates_path+template_file,templates_object)
+     }
+   },this);
+}
+    
+this.load_templates = function (templates_object,callback) // load and prepeare tempaltes
+{
+
+   templates_object.htmlencode=htmlencode;
+   templates_object.debug_add_line_numbers=debug_add_line_numbers;
+   templates_object.load=function(tempalte_name,template_file,data2)
+   {
+    // data1 might need clone here , but seems not needed because wil never changed from inside template
+    templates_object.prepere_data(templates_object,tempalte_name,
+     function(data1)
+     {
+      if(typeof data2 === 'undefined' && typeof data1 !== 'undefined')
+       data2={};
+      if(typeof data2 !== 'undefined')
+       _.add(data2,data1);
+      if(templates_object[tempalte_name])
+       throw new Error('template '+(templates_object.pagefilename?templates_object.pagefilename:'')+' - '+tempalte_name+' already exists.');
+      else
+      {
+       //console.log('load template1 '+(templates_object.pagefilename?templates_object.pagefilename:'')+' - '+tempalte_name+'.');
+       templates_object[tempalte_name]=loadtemplate(self.templates_path+template_file,templates_object,data2);
+      }
+     }        
+    );
+   }
+   templates_object._=_;
+   
+   templates_object.load1=function(tempalte_name,template_file)
+   {
+    if(templates_object[tempalte_name])
+     throw new Error('template '+(templates_object.pagefilename?templates_object.pagefilename:'')+tempalte_name+' already exists.');
+    else
+    {
+     templates_object[tempalte_name]=loadtemplate1(self.templates_path+template_file,templates_object);
+     //console.log('load template2 '+(templates_object.pagefilename?templates_object.pagefilename:'')+' - '+tempalte_name+'.');
+    }
+   }
+   
+   var data,tempalte_name,template_file;
+   // load templates
+   var countcallback=0;// count inner loops until callback
+   countcallback++;//one more for this function;
+   if(templates_object.load_templates)
+   _.foreach(templates_object.load_templates,
+   function (template_file,tempalte_name)
+   {
+     countcallback++;
+     templates_object.prepere_data(templates_object,tempalte_name, function(data)
+     {
+      if(templates_object[tempalte_name])
+       throw new Error('template3 '+(templates_object.pagefilename?templates_object.pagefilename:'')+' - '+tempalte_name+' already exists.'+' model:'+(templates_object.model?templates_object.model.modelname:''));
+      else
+      {
+       /*
+       //// debug template redifinition: (uncomment then recomment) 
+       if((templates_object.pagefilename?templates_object.pagefilename:'')=='/var/www/nodejs-mongodb-app/templates/default/add.js'&& tempalte_name=='content')
+       {
+        try
+        { 
+         throw new Error('load_template trace '+(templates_object.pagefilename?templates_object.pagefilename:'')+' - '+tempalte_name+' model:'+(templates_object.model?templates_object.model.modelname:''));
+        }
+        catch (e) { console.log(e.stack); }
+       }
+       //// end debug template redifinition:
+       */ 
+       //console.log('load template3 '+(templates_object.pagefilename?templates_object.pagefilename:'')+' - '+tempalte_name+' model:'+(templates_object.model?templates_object.model.modelname:''));
+       templates_object[tempalte_name]=loadtemplate(self.templates_path+template_file,templates_object,data)
+      }
+      countcallback--;
+      if(countcallback==0) {if(callback)callback(); }
+     }
+    );
+   },this);
+   
+            
+   // prepeare function templates
+   if(templates_object.prepeare_templates)
+   _.foreach(templates_object.prepeare_templates,
+   function (template_file,tempalte_name)
+   {
+    countcallback++;
+    templates_object.prepere_data(templates_object,tempalte_name,function (data)
+    {
+     if(templates_object[tempalte_name])
+      throw new Error('template '+(templates_object.pagefilename?templates_object.pagefilename:'')+' - '+tempalte_name+' already exists.');
+     else
+     {
+      //console.log('load template4 '+(templates_object.pagefilename?templates_object.pagefilename:'')+' - '+tempalte_name+'.');
+      templates_object[tempalte_name]=prepeare(template_file,'function/'+tempalte_name,templates_object,data);
+     }
+     countcallback--;
+     if(countcallback==0) if(callback)callback();
+    });
+   }
+   ,this);
+   countcallback--;
+   if(countcallback==0) {if(callback)callback(); }
+}
